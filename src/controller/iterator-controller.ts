@@ -47,12 +47,12 @@ export function createIteratorController<T>(generator: OperationIterator<T>): Co
       return yield* iterate(() => generator.next(), signal);
     },
 
-    *ensure(): Prog<void> {
+    *ensure(): Prog<Outcome<any>> {
       signal.abort = true;
       if (yieldingTo) {
         yield* yieldingTo.halt();
       }
-      yield* iterate(() => generator.return({} as unknown as T), { abort: false })
+      return yield* iterate(() => generator.return({} as unknown as T), { abort: false })
     },
   }
 }

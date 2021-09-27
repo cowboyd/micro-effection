@@ -24,7 +24,7 @@ export function* shift<T>(block: (k: Continuation<T>) => Prog): Prog<T> {
   return yield { type: 'shift', block };
 }
 
-export function evaluate(block: () => Prog, done: Continuation = v => v, value?: unknown): any {
+export function evaluate<T>(block: () => Prog<T>, done: Continuation = v => v, value?: unknown): T {
   let prog = block();
   let next = prog.next(value);
   if (next.done) {

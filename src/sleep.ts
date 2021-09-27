@@ -15,6 +15,7 @@ export function sleep(durationMillis: number): Operation<void> {
       if (timeoutId) {
         clearTimeout(timeoutId);
       }
+      return { type: "success", value: undefined };
     }
   }
 }

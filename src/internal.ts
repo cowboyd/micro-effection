@@ -3,15 +3,17 @@ import { Prog, shift, reset } from "./continutation";
 import { createDestiny, Outcome } from "./destiny";
 import { createController } from './controller';
 import { detach } from './detach';
+import { externalize } from "./task";
 
 export interface TaskInternal<T> {
-  status: 'pending' | 'settling' | 'completed' | 'errored' | 'halted';
-  halt(): Prog<void>;
+  state: 'pending' | 'settling' | 'completed' | 'errored' | 'halted';
+  spawn<R>(operation: Operation<R>): Prog<TaskInternal<R>>;
+  halt(): Prog<Outcome<void>>;
   [Symbol.iterator](): Prog<Outcome<T>>
 }
 
 export function* createTask<T>(operation: Operation<T>): Prog<TaskInternal<T>> {
-  let status: TaskInternal<T>["status"] = "pending";
+  let status: TaskInternal<T>["state"] = "pending";
   let children = new Set<TaskInternal<unknown>>();
 
   let destiny = yield* createDestiny<T>();
@@ -29,19 +31,38 @@ export function* createTask<T>(operation: Operation<T>): Prog<TaskInternal<T>> {
         }
       }
 
+      function* spawn<R>(operation?: Operation<R>) {
+        let child = yield* createTask(operation);
+        children.add(child);
+        yield* detach(function*() {
+          let result = yield* child;
+          if (result.type === 'failure') {
+            settle(result);
+          }
+        });
+        return child;
+      }
+
+      function* halt() {
+        yield* reset(function*() {
+          settle({ type: 'halt' });
+        });
+        return yield* destiny;
+      }
+
+      let task: TaskInternal<T> = {
+        get state() { return status; },
+        spawn,
+        halt,
+        [Symbol.iterator]() { return destiny[Symbol.iterator](); }
+      } as TaskInternal<T>;
+
       yield* detach(function*() {
-        let result = yield* begin();
+        let result = yield* begin(yield* externalize(task));
         settle(result);
       });
 
-      return {
-        get status() { return status; },
-        *halt() {
-          settle({ type: 'halt' });
-          yield* destiny;
-        },
-        [Symbol.iterator]() { return destiny[Symbol.iterator](); }
-      } as TaskInternal<T>;
+      return task;
     });
 
     status = 'settling';
