@@ -114,26 +114,26 @@ describe('spawn', () => {
     expect(root.state).toEqual('errored');
   });
 
-  // it('rejects when child errors during halting', async () => {
-  //   let child;
-  //   let root = run(function*(context: Task<string>) {
-  //     child = context.run(function*() {
-  //       try {
-  //         yield;
-  //       } finally {
-  //         throw new Error("moo");
-  //       }
-  //     });
-  //     yield;
-  //     return "foo";
-  //   });
+  it.skip('rejects when child errors during halting', async () => {
+    let child;
+    let root = run(function*(context: Task<string>) {
+      child = context.run(function*() {
+        try {
+          yield;
+        } finally {
+          throw new Error("moo");
+        }
+      });
+      yield;
+      return "foo";
+    });
 
-  //   await root.halt();
+    await root.halt();
 
-  //   await expect(root).rejects.toHaveProperty('message', 'moo');
-  //   await expect(child).rejects.toHaveProperty('message', 'moo');
-  //   expect(root.state).toEqual('errored');
-  // });
+    await expect(root).rejects.toHaveProperty('message', 'moo');
+    await expect(child).rejects.toHaveProperty('message', 'moo');
+    expect(root.state).toEqual('errored');
+  });
 
   // it('throws an error when called after controller finishes', async () => {
   //   let root = run(function*(context: Task) {
@@ -147,52 +147,52 @@ describe('spawn', () => {
   //   expect(() => root.run()).toThrowError('cannot spawn a child on a task which is not running');
   // });
 
-  // it('halts when child finishes during asynchronous halt', async () => {
-  //   let didFinish = false;
-  //   let root = run(function*(context: Task) {
-  //     context.run(function*() {
-  //       yield sleep(5);
-  //     });
-  //     try {
-  //       yield;
-  //     } finally {
-  //       yield sleep(20);
-  //       didFinish = true;
-  //     }
-  //   });
+  it('halts when child finishes during asynchronous halt', async () => {
+    let didFinish = false;
+    let root = run(function*(context: Task) {
+      context.run(function*() {
+        yield sleep(5);
+      });
+      try {
+        yield;
+      } finally {
+        yield sleep(20);
+        didFinish = true;
+      }
+    });
 
-  //   await root.halt();
+    await root.halt();
 
-  //   expect(didFinish).toEqual(true);
-  // });
+    expect(didFinish).toEqual(true);
+  });
 
-  // it('runs destructors in reverse order and in series', async () => {
-  //   let result: string[] = [];
-  //   let root = run(function*(context: Task) {
-  //     context.run(function*() {
-  //       try {
-  //         yield;
-  //       } finally {
-  //         result.push('first start');
-  //         yield sleep(5);
-  //         result.push('first done');
-  //       }
-  //     });
-  //     context.run(function*() {
-  //       try {
-  //         yield;
-  //       } finally {
-  //         result.push('second start');
-  //         yield sleep(10);
-  //         result.push('second done');
-  //       }
-  //     });
-  //   });
+  it('runs destructors in reverse order and in series', async () => {
+    let result: string[] = [];
+    let root = run(function*(context: Task) {
+      context.run(function*() {
+        try {
+          yield;
+        } finally {
+          result.push('first start');
+          yield sleep(5);
+          result.push('first done');
+        }
+      });
+      context.run(function*() {
+        try {
+          yield;
+        } finally {
+          result.push('second start');
+          yield sleep(10);
+          result.push('second done');
+        }
+      });
+    });
 
-  //   await root;
+    await root;
 
-  //   expect(result).toEqual(['second start', 'second done', 'first start', 'first done']);
-  // });
+    expect(result).toEqual(['second start', 'second done', 'first start', 'first done']);
+  });
 
   // describe('with blockParent: true', () => {
   //   it('blocks on child when finishing normally', async () => {

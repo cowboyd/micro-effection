@@ -72,7 +72,7 @@ export function* createTask<T>(operation: Operation<T>): Prog<TaskInternal<T>> {
     }
 
     let order = [...children];
-    for (let child = order.shift(); child; child = order.shift()) {
+    for (let child = order.pop(); child; child = order.pop()) {
       yield* child.halt();
     }
 
