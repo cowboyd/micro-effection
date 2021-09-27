@@ -2,7 +2,7 @@ import { describe, it } from 'mocha';
 import expect from 'expect';
 
 import { createDestiny } from '../src/destiny';
-import { evaluate, Prog, shift, reset } from '../src/delimited-continutation';
+import { evaluate, Prog, shift, reset } from '../src/continutation';
 import { detach } from '../src/detach';
 
 describe('Destiny', () => {

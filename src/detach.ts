@@ -1,4 +1,4 @@
-import { Continuation, Prog, reset, shift } from './delimited-continutation';
+import { Continuation, Prog, reset, shift } from './continutation';
 
 /**
 * decouples the flow of `block` from the current Prog. Detach starts running

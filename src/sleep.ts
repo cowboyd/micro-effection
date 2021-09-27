@@ -1,5 +1,5 @@
 import { Operation } from './api';
-import { shift } from './delimited-continutation';
+import { shift } from './continutation';
 import { Outcome } from './destiny';
 
 export function sleep(durationMillis: number): Operation<void> {

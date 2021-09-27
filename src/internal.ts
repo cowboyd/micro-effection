@@ -1,5 +1,5 @@
 import { Operation } from "./api";
-import { Prog, shift, reset } from "./delimited-continutation";
+import { Prog, shift, reset } from "./continutation";
 import { createDestiny, Outcome } from "./destiny";
 import { createController } from './controller';
 import { detach } from './detach';

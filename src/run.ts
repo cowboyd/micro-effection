@@ -1,5 +1,5 @@
 import { Operation, Task } from "./api";
-import { Continuation, evaluate } from './delimited-continutation';
+import { Continuation, evaluate } from './continutation';
 import { detach } from "./detach";
 import { createTask, TaskInternal } from './internal';
 

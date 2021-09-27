@@ -1,4 +1,4 @@
-import { Continuation, Prog, reset, shift } from './delimited-continutation';
+import { Continuation, Prog, reset, shift } from './continutation';
 
 export type Outcome<T> =
   { type: 'success', value: T } |
