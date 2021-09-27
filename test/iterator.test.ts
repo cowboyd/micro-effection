@@ -1,4 +1,3 @@
-//import { createNumber, blowUp } from './setup';
 import { describe, it } from 'mocha';
 import expect from 'expect';
 
@@ -122,7 +121,7 @@ describe('generator function', () => {
   //   expect(child && child.state).toEqual('halted');
   // });
 
-  it.skip('can suspend in finally block', async () => {
+  it('can suspend in finally block', async () => {
     let task: Task<void> | undefined = undefined;
     let promise = new Promise<number>((resolve) => {
       task = run(function*(): Operation<void> {
@@ -138,36 +137,37 @@ describe('generator function', () => {
     })
 
     await expect(promise).resolves.toEqual(123);
-    //expect(task?.status).toEqual('halted');
+
+    expect((task as unknown as Task<void>).status).toEqual('halted');
   });
 
-  // it('can suspend in yielded finally block', async () => {
-  //   let things: string[] = [];
+  it('can suspend in yielded finally block', async () => {
+    let things: string[] = [];
 
-  //   let task = run(function*() {
-  //     try {
-  //       yield function*() {
-  //         try {
-  //           yield;
-  //         } finally {
-  //           yield sleep(5);
-  //           things.push("first");
-  //         }
-  //       };
-  //     } finally {
-  //       things.push("second");
-  //     }
-  //   });
+    let task = run(function*() {
+      try {
+        yield function*() {
+          try {
+            yield;
+          } finally {
+            yield sleep(5);
+            things.push("first");
+          }
+        };
+      } finally {
+        things.push("second");
+      }
+    });
 
-  //   task.halt();
+    task.halt();
 
-  //   await expect(task).rejects.toHaveProperty('message', 'halted');
-  //   expect(task.state).toEqual('halted');
+    await expect(task).rejects.toHaveProperty('message', 'halted');
+    expect(task.status).toEqual('halted');
 
-  //   expect(things).toEqual(['first', 'second']);
-  // });
+    expect(things).toEqual(['first', 'second']);
+  });
 
-  it.skip('can await halt', async () => {
+  it('can await halt', async () => {
     let didRun = false;
 
     let task = run(function*(): Operation<void> {

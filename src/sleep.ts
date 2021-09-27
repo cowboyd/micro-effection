@@ -6,10 +6,10 @@ export function sleep(durationMillis: number): Operation<void> {
   let timeoutId: any;
   return {
     *begin() {
-      yield shift(function*(k) {
-        timeoutId = setTimeout(k, durationMillis);
+      return yield* shift<Outcome<void>>(function*(k) {
+        let done = () => k({ type: 'success'} as Outcome<void>)
+        timeoutId = setTimeout(done, durationMillis);
       });
-      return { type: 'success' } as Outcome<void>;
     },
     *ensure() {
       if (timeoutId) {

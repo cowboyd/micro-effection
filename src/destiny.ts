@@ -19,8 +19,8 @@ export function* createDestiny<T>(): Prog<NewDestiny<T>> {
   let outcome: Outcome<T>;
   let watchers: Continuation<Outcome<T>>[] = [];
 
-  let fulfill: Continuation<Outcome<T>> = yield reset(function*() {
-    outcome = yield shift(function*(k) { return k; });
+  let fulfill = yield* reset<Continuation<Outcome<T>>>(function*() {
+    outcome = yield* shift<Outcome<T>>(function*(k) { return k; });
 
     for (let k = watchers.shift(); k; k = watchers.shift()) {
       if (!!k) {
@@ -34,7 +34,7 @@ export function* createDestiny<T>(): Prog<NewDestiny<T>> {
       if (outcome) {
         return outcome;
       } else {
-        return yield shift(function*(k) { watchers.push(k); });
+        return yield* shift<Outcome<T>>(function*(k) { watchers.push(k); });
       }
     }
   }

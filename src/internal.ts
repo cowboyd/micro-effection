@@ -16,10 +16,10 @@ export function* createTask<T>(operation: Operation<T>): Prog<TaskInternal<T>> {
 
   let destiny = yield* createDestiny<T>();
 
-  return yield reset(function*() {
+  return yield* reset<TaskInternal<T>>(function*() {
     let { begin, ensure } = createController(operation);
 
-    let outcome: Outcome<T> = yield shift(function*(k) {
+    let outcome = yield* shift<Outcome<T>>(function*(k) {
       let settled = false;
 
       function settle(result: Outcome<T>) {

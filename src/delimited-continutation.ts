@@ -16,12 +16,12 @@ export interface Reset {
 
 export type Control = Reset | Shift;
 
-export function reset(block: () => Prog): Reset {
-  return { type: 'reset', block };
+export function* reset<T>(block: () => Prog): Prog<T> {
+  return yield { type: 'reset', block };
 }
 
-export function shift(block: (k: Continuation) => Prog): Shift {
-  return { type: 'shift', block };
+export function* shift<T>(block: (k: Continuation<T>) => Prog): Prog<T> {
+  return yield { type: 'shift', block };
 }
 
 export function evaluate(block: () => Prog, done: Continuation = v => v, value?: unknown): any {

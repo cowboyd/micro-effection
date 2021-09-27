@@ -14,15 +14,20 @@ export function createController<T>(operation: Operation<T>): Controller<T> {
     return createFunctionController(() => createController(operation()));
   } else if (isController(operation)) {
     return operation;
-  } else {
+  } else if (isGenerator(operation)) {
     return createIteratorController(operation);
+  } else if (operation == null) {
+    return createSuspendController();
+  } else {
+    throw new Error(`unknown operation: ${operation}`);
   }
+
 }
 
 function createPromiseController<T>(promise: PromiseLike<T>): Controller<T> {
   return {
     *begin() {
-      return yield shift(function*(k) {
+      return yield* shift<Outcome<T>>(function*(k) {
         promise.then(
           value => k({ type: 'success', value }),
           error => k({ type: 'failure', error })
@@ -47,6 +52,14 @@ function createFunctionController<T>(create: () => Controller<T>): Controller<T>
       if (delegate && delegate.ensure) {
         return yield* delegate.ensure();
       }
+    }
+  }
+}
+
+function createSuspendController<T>(): Controller<T> {
+  return {
+    *begin() {
+      return yield* shift<Outcome<T>>(function*() {});
     }
   }
 }

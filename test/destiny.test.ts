@@ -28,8 +28,8 @@ describe('Destiny', () => {
       let { fulfill, destiny } = yield* createDestiny();
 
       function* createObserver(): Prog<{ calls: number }> {
-        return yield reset(function*() {
-          yield shift(function*() {
+        return yield* reset(function*() {
+          yield* shift(function*() {
             let state = { calls: 0 };
 
             yield* detach(function*() {
