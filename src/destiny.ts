@@ -24,7 +24,7 @@ export function* createDestiny<T>(): Prog<NewDestiny<T>> {
 
     for (let k = watchers.shift(); k; k = watchers.shift()) {
       if (!!k) {
-        yield* (function*() { k(outcome)})()
+        k(outcome);
       }
     }
   });
@@ -42,6 +42,6 @@ export function* createDestiny<T>(): Prog<NewDestiny<T>> {
   return {
     destiny,
     fulfill,
-    [Symbol.iterator]() { return destiny[Symbol.iterator](); }
+    *[Symbol.iterator]() { return yield* destiny; }
   };
 }
