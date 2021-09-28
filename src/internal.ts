@@ -53,7 +53,7 @@ export function* createTask<T>(operation: Operation<T>): Prog<TaskInternal<T>> {
         get state() { return state; },
         run,
         halt,
-        [Symbol.iterator]() { return destiny[Symbol.iterator](); }
+        *[Symbol.iterator]() { return yield* destiny; }
       } as TaskInternal<T>;
 
       yield* detach(function*() {
