@@ -4,11 +4,10 @@ import { createDestiny, Outcome } from "./destiny";
 import { createController } from './controller';
 import { detach } from './detach';
 import { externalize } from "./task";
-import { reduce } from "./reduce";
 
 export interface TaskInternal<T> {
   state: 'pending' | 'settling' | 'completed' | 'errored' | 'halted';
-  spawn<R>(operation: Operation<R>): Prog<TaskInternal<R>>;
+  run<R>(operation: Operation<R>): Prog<TaskInternal<R>>;
   halt(): Prog<Outcome<void>>;
   [Symbol.iterator](): Prog<Outcome<T>>
 }
@@ -32,7 +31,7 @@ export function* createTask<T>(operation: Operation<T>): Prog<TaskInternal<T>> {
         }
       }
 
-      function* spawn<R>(operation?: Operation<R>) {
+      function* run<R>(operation?: Operation<R>) {
         let child = yield* createTask(operation);
         children.add(child);
         yield* detach(function*() {
@@ -52,7 +51,7 @@ export function* createTask<T>(operation: Operation<T>): Prog<TaskInternal<T>> {
 
       let task: TaskInternal<T> = {
         get state() { return state; },
-        spawn,
+        run,
         halt,
         [Symbol.iterator]() { return destiny[Symbol.iterator](); }
       } as TaskInternal<T>;

@@ -31,9 +31,10 @@ export function* externalize<T>(internal: TaskInternal<T>): Prog<Task<T>> {
     catch: (...args) => promise.catch(...args),
     finally: (...args) => promise.finally(...args),
     [Symbol.toStringTag]:  '[object Task]',
+
     run<T>(operation: Operation<T>): Task<T> {
       return evaluate(function*() {
-        return yield* externalize(yield* internal.spawn(operation));
+        return yield* externalize(yield* internal.run(operation));
       })
     },
     halt() {
