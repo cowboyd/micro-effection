@@ -4,6 +4,7 @@ import { createDestiny, Outcome } from "./destiny";
 import { createController } from './controller';
 import { detach } from './detach';
 import { externalize } from "./task";
+import { reduce } from "./reduce";
 
 export interface TaskInternal<T> {
   state: 'pending' | 'settling' | 'completed' | 'errored' | 'halted';
@@ -13,7 +14,7 @@ export interface TaskInternal<T> {
 }
 
 export function* createTask<T>(operation: Operation<T>): Prog<TaskInternal<T>> {
-  let status: TaskInternal<T>["state"] = "pending";
+  let state: TaskInternal<T>["state"] = "pending";
   let children = new Set<TaskInternal<unknown>>();
 
   let destiny = yield* createDestiny<T>();
@@ -36,6 +37,7 @@ export function* createTask<T>(operation: Operation<T>): Prog<TaskInternal<T>> {
         children.add(child);
         yield* detach(function*() {
           let result = yield* child;
+          children.delete(child);
           if (result.type === 'failure') {
             settle(result);
           }
@@ -44,14 +46,12 @@ export function* createTask<T>(operation: Operation<T>): Prog<TaskInternal<T>> {
       }
 
       function* halt() {
-        yield* reset(function*() {
-          settle({ type: 'halt' });
-        });
+        settle({ type: 'halt' });
         return yield* destiny;
       }
 
       let task: TaskInternal<T> = {
-        get state() { return status; },
+        get state() { return state; },
         spawn,
         halt,
         [Symbol.iterator]() { return destiny[Symbol.iterator](); }
@@ -65,7 +65,7 @@ export function* createTask<T>(operation: Operation<T>): Prog<TaskInternal<T>> {
       return task;
     });
 
-    status = 'settling';
+    state = 'settling';
 
     if (ensure) {
       yield* ensure();
@@ -76,7 +76,7 @@ export function* createTask<T>(operation: Operation<T>): Prog<TaskInternal<T>> {
       yield* child.halt();
     }
 
-    status = outcome.type === 'success' ? 'completed' : (outcome.type === 'failure' ? 'errored' : 'halted');
+    state = outcome.type === 'success' ? 'completed' : (outcome.type === 'failure' ? 'errored' : 'halted');
 
     destiny.fulfill(outcome);
   });

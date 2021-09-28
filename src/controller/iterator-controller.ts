@@ -13,33 +13,30 @@ export function createIteratorController<T>(generator: OperationIterator<T>): Co
 
   function* iterate(initial: () => IteratorResult<Operation<unknown>, T>, signal: Signal): Prog<Outcome<T>> {
     let next = initial;
-    while (true) {
+    while (!signal.abort) {
+      let current: IteratorResult<Operation<unknown>, T>;
       try {
-        if (signal.abort) {
-          return { type: 'halt' };
-        }
-        let current = next();
-        if (current.done) {
-          let { value } = current;
-          return { type: 'success', value };
-        } else {
-          let operation = current.value;
-          yieldingTo = yield* createTask(operation);
-          let outcome = yield* yieldingTo;
-          if (outcome.type === 'success') {
-            let { value } = outcome;
-            next = () => generator.next(value);
-          } else if (outcome.type === 'failure') {
-            let { error } = outcome;
-            next = () => generator.throw(error);
-          } else {
-            next = () => generator.throw(new Error('halted'));
-          }
-        }
+        current = next();
       } catch (error) {
         return { type: 'failure', error: error as Error }
       }
+      if (current.done) {
+        return { type: 'success', value: current.value };
+      } else {
+        yieldingTo = yield* createTask(current.value);
+        let outcome = yield* yieldingTo;
+        if (outcome.type === 'success') {
+          let { value } = outcome;
+          next = () => generator.next(value);
+        } else if (outcome.type === 'failure') {
+          let { error } = outcome;
+          next = () => generator.throw(error);
+        } else {
+          next = () => generator.throw(new Error('halted'));
+        }
+      }
     }
+    return { type: 'halt' };
   }
 
   return {

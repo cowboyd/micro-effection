@@ -50,7 +50,7 @@ function createFunctionController<T>(create: (t: Task<T>) => Controller<T>): Con
       if (delegate && delegate.ensure) {
         return yield* delegate.ensure();
       } else {
-        return { type: 'success', value: undefined };
+        return { type: 'success' } as Outcome<T>;
       }
     }
   }

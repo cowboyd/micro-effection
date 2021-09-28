@@ -7,6 +7,6 @@ export type Operation<T> = PromiseLike<T> | OperationIterator<T> | OperationFn<T
 
 export interface Task<T = any> extends Promise<T> {
   state: 'pending' | 'settling' | 'completed' | 'errored' | 'halted';
-  run(operation?: Operation<T>): Task<T>;
+  run<R>(operation?: Operation<R>): Task<R>;
   halt(): Promise<void>;
 }
