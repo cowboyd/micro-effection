@@ -34,7 +34,16 @@ export function evaluate<T>(block: () => Prog<T>, done: Continuation = v => v, v
     if (control.type === 'reset') {
       return evaluate(control.block, v => evaluate(() => prog, done, v));
     } else {
-      let k: Continuation = value => evaluate(() => prog, v => v, value);
+      let continued = false;
+      let result: any;
+      let k: Continuation = value => {
+        if (!continued) {
+          continued = true;
+          return result = evaluate(() => prog, v => v, value)
+        } else {
+          return result;
+        }
+      };
       return evaluate(() => control.block(k), done);
     }
   }

@@ -21,15 +21,7 @@ export function* createTask<T>(operation: Operation<T>): Prog<TaskInternal<T>> {
   return yield* reset<TaskInternal<T>>(function*() {
     let { begin, ensure } = createController(operation);
 
-    let outcome = yield* shift<Outcome<T>>(function*(k) {
-      let settled = false;
-
-      function settle(result: Outcome<T>) {
-        if (!settled) {
-          settled = true;
-          k(result);
-        }
-      }
+    let outcome = yield* shift<Outcome<T>>(function*(settle) {
 
       function* run<R>(operation?: Operation<R>) {
         let child = yield* createTask(operation);
