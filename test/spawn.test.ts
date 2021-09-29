@@ -135,17 +135,17 @@ describe('spawn', () => {
     expect(root.state).toEqual('errored');
   });
 
-  // it('throws an error when called after controller finishes', async () => {
-  //   let root = run(function*(context: Task) {
-  //     context.run(sleep(100), { blockParent: true });
+  it.skip('throws an error when called after controller finishes', async () => {
+    let root = run(function*(context: Task) {
+      context.run(sleep(100), { blockParent: true });
 
-  //     yield sleep(10);
-  //   });
+      yield sleep(10);
+    });
 
-  //   await run(sleep(20));
+    await run(sleep(20));
 
-  //   expect(() => root.run()).toThrowError('cannot spawn a child on a task which is not running');
-  // });
+    expect(() => root.run()).toThrowError('cannot spawn a child on a task which is not running');
+  });
 
   it('halts when child finishes during asynchronous halt', async () => {
     let didFinish = false;
@@ -194,22 +194,21 @@ describe('spawn', () => {
     expect(result).toEqual(['second start', 'second done', 'first start', 'first done']);
   });
 
-  // describe('with blockParent: true', () => {
-  //   it('blocks on child when finishing normally', async () => {
-  //     let child: Task<string> | undefined;
-  //     let root = run(function*(context: Task) {
-  //       child = context.run(function*() {
-  //         yield sleep(5);
-  //         return 'foo';
-  //       }, { blockParent: true });
+  describe('with blockParent: true', () => {
+    it.skip('blocks on child when finishing normally', async () => {
+      let child: Task<string> | undefined;
+      let root = run(function*(context: Task) {
+        child = context.run(function*() {
+          yield sleep(5);
+          return 'foo';
+        }, { blockParent: true });
+        return 1;
+      });
 
-  //       return 1;
-  //     });
-
-  //     await expect(root).resolves.toEqual(1);
-  //     await expect(child).resolves.toEqual('foo');
-  //     expect(root.state).toEqual('completed');
-  //     expect(child && child.state).toEqual('completed');
-  //   });
-  // });
+      await expect(root).resolves.toEqual(1);
+      await expect(child).resolves.toEqual('foo');
+      expect(root.state).toEqual('completed');
+      expect(child && child.state).toEqual('completed');
+    });
+  });
 });
