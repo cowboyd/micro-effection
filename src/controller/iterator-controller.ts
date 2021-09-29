@@ -10,15 +10,19 @@ type Signal = { abort: boolean; };
 export function createIteratorController<T>(generator: OperationIterator<T>): Controller<T> {
   let yieldingTo: TaskInternal<unknown>;
   let signal: Signal = { abort: false };
+  let running = false;
 
   function* iterate(initial: () => IteratorResult<Operation<unknown>, T>, signal: Signal): Prog<Outcome<T>> {
     let next = initial;
-    while (!signal.abort) {
+    while (!signal.abort && !running) {
       let current: IteratorResult<Operation<unknown>, T>;
       try {
+        running = true;
         current = next();
       } catch (error) {
         return { type: 'failure', error: error as Error }
+      } finally {
+        running = false;
       }
       if (current.done) {
         return { type: 'success', value: current.value };
