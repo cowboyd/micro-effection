@@ -1,6 +1,6 @@
-import { Operation } from './api';
-import { shift } from './continutation';
-import { Outcome } from './destiny';
+import { Operation } from '../api';
+import { shift } from '../continutation';
+import { Outcome } from '../destiny';
 
 export function sleep(durationMillis: number): Operation<void> {
   let timeoutId: any;

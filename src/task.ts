@@ -1,6 +1,7 @@
-import { Operation, Task } from "./api";
+import type { Operation, Task, TaskOptions } from "./api";
 import { Continuation, evaluate, Prog } from './continutation';
 import { detach } from "./detach";
+import { createFuture } from "./future";
 import { createTask, TaskInternal } from './internal';
 
 export function run<T>(operation: Operation<T>): Task<T> {
@@ -25,25 +26,40 @@ export function* externalize<T>(internal: TaskInternal<T>): Prog<Task<T>> {
     }
   });
 
-  return {
+  let task: Task<T> = {
     get state() { return internal.state; },
+    get options() { return internal.options; },
     then: (...args) => promise.then(...args),
     catch: (...args) => promise.catch(...args),
     finally: (...args) => promise.finally(...args),
     [Symbol.toStringTag]:  '[object Task]',
 
-    run<T>(operation: Operation<T>): Task<T> {
+    run<T>(operation: Operation<T>, options?: TaskOptions): Task<T> {
       return evaluate(function*() {
-        return yield* externalize(yield* internal.run(operation));
+        return yield* externalize(yield* internal.run(operation, {
+          scope: task,
+          ...options
+        }));
       })
     },
+    spawn<T>(operation: Operation<T>, options?: TaskOptions): Operation<Task<T>> {
+      return {
+        *begin() {
+          return { type: 'success', value: task.run(operation, options) };
+        }
+      }
+    },
     halt() {
-      return new Promise(resolve => {
-        evaluate(function*() {
-          yield* internal.halt();
-          resolve();
-        })
+      let { future, resolve } = createFuture<void>();
+      evaluate(function*() {
+        yield* internal.interrupt();
+        yield* internal.halt();
+        resolve();
       });
-    }
-  }
+      return future;
+    },
+    *[Symbol.iterator]() { return yield* internal; }
+  };
+
+  return task;
 }

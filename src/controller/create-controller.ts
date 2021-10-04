@@ -1,9 +1,10 @@
-import type { Operation, Task } from '../api';
+import type { Operation, Resource, Task } from '../api';
 import type { Outcome } from '../destiny';
 import type { Controller } from './controller';
 
 import { shift } from '../continutation';
 import { createIteratorController } from './iterator-controller';
+import { createResourceController }  from './resource-controller';
 
 export function createController<T>(operation: Operation<T>): Controller<T> {
   if (isPromise<T>(operation)) {
@@ -14,6 +15,8 @@ export function createController<T>(operation: Operation<T>): Controller<T> {
     return operation as Controller<T>;
   } else if (isGenerator<T>(operation)) {
     return createIteratorController<T>(operation as Generator<Operation<any>, T>);
+  } else if (isResource(operation)) {
+    return createResourceController<T>(operation);
   } else if (operation == null) {
     return createSuspendController();
   } else {
@@ -46,6 +49,13 @@ function createFunctionController<T>(create: (t: Task<T>) => Controller<T>): Con
       }
       return yield* delegate.begin(task);
     },
+    *interrupt() {
+      if (delegate && delegate.interrupt) {
+        return yield* delegate.interrupt();
+      } else {
+        return { type: 'success' } as Outcome<T>;
+      }
+    },
     *ensure() {
       if (delegate && delegate.ensure) {
         return yield* delegate.ensure();
@@ -74,4 +84,12 @@ export function isGenerator<T>(value: any): value is Generator<T> {
 
 export function isController(value: any): value is Controller<unknown> {
   return value && typeof(value.begin) === 'function'
+}
+
+export function isResource<T>(value: any): value is Resource<T> {
+  return !!value && (
+    typeof value.init === 'function' ||
+      isPromise<T>(value.init) ||
+      isGenerator<T>(value.init) ||
+      isController(value.init));
 }

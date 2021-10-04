@@ -1,5 +1,5 @@
 import { Operation } from '../src';
-import { sleep } from '../src/sleep';
+import { sleep } from '../src/operations/sleep';
 
 export function* createNumber(value: number): Operation<number> {
   yield sleep(1);

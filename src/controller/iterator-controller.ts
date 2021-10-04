@@ -1,5 +1,5 @@
 import type { Controller } from './controller';
-import type { Operation, OperationIterator } from "../api";
+import type { Operation, OperationIterator, Task } from "../api";
 import type { Prog } from '../continutation';
 import type { Outcome } from '../destiny';
 
@@ -8,6 +8,7 @@ import { createTask, TaskInternal } from '../internal';
 type Signal = { abort: boolean; };
 
 export function createIteratorController<T>(generator: OperationIterator<T>): Controller<T> {
+  let scope: Task<unknown>;
   let yieldingTo: TaskInternal<unknown>;
   let signal: Signal = { abort: false };
   let running = false;
@@ -27,7 +28,7 @@ export function createIteratorController<T>(generator: OperationIterator<T>): Co
       if (current.done) {
         return { type: 'success', value: current.value };
       } else {
-        yieldingTo = yield* createTask(current.value);
+        yieldingTo = yield* createTask(current.value, { scope: scope.options.yieldScope || scope });
         let outcome = yield* yieldingTo;
         if (outcome.type === 'success') {
           let { value } = outcome;
@@ -44,7 +45,8 @@ export function createIteratorController<T>(generator: OperationIterator<T>): Co
   }
 
   return {
-    *begin(): Prog<Outcome<T>> {
+    *begin(task): Prog<Outcome<T>> {
+      scope = task;
       return yield* iterate(() => generator.next(), signal);
     },
 
