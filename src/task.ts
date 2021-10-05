@@ -28,6 +28,7 @@ export function* externalize<T>(internal: TaskInternal<T>): Prog<Task<T>> {
 
   let task: Task<T> = {
     get state() { return internal.state; },
+    get labels() { return internal.labels; },
     get options() { return internal.options; },
     then: (...args) => promise.then(...args),
     catch: (...args) => promise.catch(...args),
@@ -35,7 +36,7 @@ export function* externalize<T>(internal: TaskInternal<T>): Prog<Task<T>> {
     [Symbol.toStringTag]:  '[object Task]',
 
     run<T>(operation: Operation<T>, options?: TaskOptions): Task<T> {
-      if (task.state !== 'pending') {
+      if (task.state !== 'running') {
         throw new Error('cannot spawn a child on a task which is not running');
       }
       return evaluate(function*() {
