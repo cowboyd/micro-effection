@@ -96,7 +96,7 @@ describe('spawn', () => {
     expect(root.state).toEqual('completed');
   });
 
-  it.skip('rejects when child errors during completing', async () => {
+  it('rejects when child errors during completing', async () => {
     let child;
     let root = run(function*(context: Task<string>) {
       child = context.run(function*() {
@@ -114,7 +114,7 @@ describe('spawn', () => {
     expect(root.state).toEqual('errored');
   });
 
-  it.skip('rejects when child errors during halting', async () => {
+  it('rejects when child errors during halting', async () => {
     let child;
     let root = run(function*(context: Task<string>) {
       child = context.run(function*() {
@@ -143,7 +143,6 @@ describe('spawn', () => {
     });
 
     await run(sleep(20));
-
     expect(() => root.run()).toThrowError('cannot spawn a child on a task which is not running');
   });
 
@@ -195,7 +194,7 @@ describe('spawn', () => {
   });
 
   describe('with blockParent: true', () => {
-    it.skip('blocks on child when finishing normally', async () => {
+    it('blocks on child when finishing normally', async () => {
       let child: Task<string> | undefined;
       let root = run(function*(context: Task) {
         child = context.run(function*() {

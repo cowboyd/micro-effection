@@ -248,8 +248,7 @@ describe('generator function', () => {
     expect(didRun).toEqual(true);
   });
 
-  // debatable....
-  it.skip('can throw error when child blows up', async () => {
+  it('can throw error when child blows up', async () => {
     let task = run(function*(inner) {
       inner.run(function* willBoom() {
         yield sleep(5);

@@ -17,6 +17,7 @@ export interface TaskInternal<T> {
 export function* createTask<T>(operation: Operation<T>, options?: TaskOptions): Prog<TaskInternal<T>> {
   let state: TaskInternal<T>["state"] = "pending";
   let children = new Set<TaskInternal<unknown>>();
+  let blockers = new Set<TaskInternal<unknown>>();
   let destiny = yield* createDestiny<T>();
 
   return yield* reset<TaskInternal<T>>(function*() {
@@ -27,9 +28,13 @@ export function* createTask<T>(operation: Operation<T>, options?: TaskOptions): 
       function* run<R>(operation?: Operation<R>, options?: TaskOptions) {
         let child = yield* createTask(operation, options);
         children.add(child);
+        if (options?.blockParent) {
+          blockers.add(child);
+        }
         yield* detach(function*() {
           let result = yield* child;
           children.delete(child);
+          blockers.delete(child);
           if (result.type === 'failure') {
             settle(result);
           }
@@ -68,12 +73,18 @@ export function* createTask<T>(operation: Operation<T>, options?: TaskOptions): 
     state = 'settling';
 
     if (ensure) {
-      yield* ensure();
+      let ensured = yield* ensure();
+      if (ensured.type === 'failure') {
+        outcome = ensured;
+      }
     }
 
     let order = [...children];
     for (let child = order.pop(); child; child = order.pop()) {
-      yield* child.halt();
+      let teardown = blockers.has(child) ? yield* child :  yield* child.halt();
+      if (teardown.type === 'failure') {
+        outcome = teardown;
+      }
     }
 
     state = outcome.type === 'success' ? 'completed' : (outcome.type === 'failure' ? 'errored' : 'halted');
