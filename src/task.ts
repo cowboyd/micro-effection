@@ -35,7 +35,7 @@ export function* externalize<T>(internal: TaskInternal<T>): Prog<Task<T>> {
     [Symbol.toStringTag]:  '[object Task]',
 
     run<T>(operation: Operation<T>, options?: TaskOptions): Task<T> {
-      if (task.state !== 'pending' && task.state !== 'settling') {
+      if (task.state !== 'pending') {
         throw new Error('cannot spawn a child on a task which is not running');
       }
       return evaluate(function*() {

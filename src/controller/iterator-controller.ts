@@ -7,7 +7,12 @@ import { createTask, TaskInternal } from '../internal';
 
 type Signal = { abort: boolean; };
 
-export function createIteratorController<T>(generator: OperationIterator<T>): Controller<T> {
+const claimed = Symbol.for('effection/v2/iterator-controller/claimed');
+interface Claimable {
+  [claimed]?: boolean;
+}
+
+export function createIteratorController<T>(generator: OperationIterator<T> & Claimable): Controller<T> {
   let scope: Task<unknown>;
   let yieldingTo: TaskInternal<unknown>;
   let signal: Signal = { abort: false };
@@ -46,6 +51,12 @@ export function createIteratorController<T>(generator: OperationIterator<T>): Co
 
   return {
     *begin(task): Prog<Outcome<T>> {
+      if (generator[claimed]) {
+        let error = new Error(`An operation iterator can only be run once in a single task, but it looks like has been either yielded to, or run multiple times`);
+        error.name = 'DoubleEvalError';
+        return { type: 'failure', error };
+      }
+      generator[claimed] = true;
       scope = task;
       return yield* iterate(() => generator.next(), signal);
     },

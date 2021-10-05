@@ -135,7 +135,7 @@ describe('spawn', () => {
     expect(root.state).toEqual('errored');
   });
 
-  it.skip('throws an error when called after controller finishes', async () => {
+  it('throws an error when called after controller finishes', async () => {
     let root = run(function*(context: Task) {
       context.run(sleep(100), { blockParent: true });
 
