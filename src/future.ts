@@ -1,7 +1,6 @@
 import { evaluate, Prog } from "./continutation";
 import { createDestiny, Outcome } from "./destiny";
 
-
 /**
  * A Future represents a value which may or may not be available yet. It is
  * similar to a JavaScript Promise, except that it can resolve synchronously.
@@ -22,10 +21,25 @@ export interface Future<T> extends Promise<T> {
   [Symbol.iterator](): Prog<Outcome<T>>;
 }
 
+// deprecate
+export type Value<T> =
+  | { state: 'errored'; error: Error }
+  | { state: 'completed'; value: T }
+  | { state: 'halted' };
+
+// deprecate
+export interface Consumer<T> {
+  (value: Value<T>): void;
+}
+
 export interface NewFuture<T> {
   future: Future<T>;
   resolve(value: T): void;
   reject(error: Error): void;
+
+  //deprecate
+  halt(): void;
+  produce(value: Value<T>): void;
 }
 
 export function createFuture<T>(): NewFuture<T> {
@@ -56,7 +70,21 @@ export function createFuture<T>(): NewFuture<T> {
 
   let reject = (error: Error) => produce({ type: 'failure', error });
 
-  return { future, resolve, reject };
+  // deprecate
+  let halt = () => produce({ type: 'halt' });
+
+  // deprecate
+  let _produce = (value: Value<T>) => {
+    if (value.state === 'halted') {
+      halt();
+    } else if (value.state === 'completed') {
+      resolve(value.value);
+    } else {
+      reject(value.error);
+    }
+  }
+
+  return { future, resolve, reject, halt, produce: _produce };
 }
 
 export const Future = {
@@ -68,6 +96,12 @@ export const Future = {
   reject<T>(error: Error): Future<T> {
     let { future, reject } = createFuture<T>();
     reject(error);
+    return future;
+  },
+  // deprecate
+  halt<T>(): Future<T> {
+    let { future, halt } = createFuture<T>();
+    halt();
     return future;
   }
 }

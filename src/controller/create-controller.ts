@@ -6,9 +6,12 @@ import { shift } from '../continutation';
 import { createIteratorController } from './iterator-controller';
 import { createResourceController }  from './resource-controller';
 import { createFunctionController } from './function-controller';
+import { Future, isFuture } from '../future';
 
 export function createController<T>(operation: Operation<T>): Controller<T> {
-  if (isPromise<T>(operation)) {
+  if (isFuture(operation) || isTask(operation)) {
+    return createFutureController(operation as Future<T>);
+  } else if (isPromise<T>(operation)) {
     return createPromiseController(operation);
   } else if (typeof operation === 'function') {
     return createFunctionController(operation, (task) => createController(operation(task)));
@@ -22,6 +25,12 @@ export function createController<T>(operation: Operation<T>): Controller<T> {
     return createSuspendController();
   } else {
     throw new Error(`unknown operation: ${operation}`);
+  }
+}
+
+function createFutureController<T>(future: Future<T>): Controller<T> {
+  return {
+    *begin() { return yield* future; }
   }
 }
 
@@ -56,6 +65,10 @@ export function isGenerator<T>(value: any): value is Generator<T> {
 
 export function isController(value: any): value is Controller<unknown> {
   return value && typeof(value.begin) === 'function'
+}
+
+export function isTask<T>(value: any): value is Task<T> {
+  return value && value[Symbol.toStringTag] === 'Task';
 }
 
 export function isResource<T>(value: any): value is Resource<T> {
