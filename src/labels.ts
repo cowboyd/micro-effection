@@ -1,3 +1,4 @@
+import type { Operation, Labels } from './api';
 /**
  * Apply the given labels to an operation. When the operation is run as a task,
  * using {@link run} or {@link spawn}, the labels get applied to the task as

@@ -21,6 +21,16 @@ export function* createTask<T>(operation: Operation<T>, options?: TaskOptions): 
   let blockers = new Set<TaskInternal<unknown>>();
   let destiny = yield* createDestiny<T>();
 
+  let labels: Labels = { ...operation?.labels, ...options?.labels };
+
+  if (!labels.name) {
+    if (operation?.name) {
+      labels.name = operation?.name;
+    } else if (!operation) {
+      labels.name = 'suspend';
+    }
+  }
+
   return yield* reset<TaskInternal<T>>(function*() {
     let { begin, interrupt, ensure } = createController(operation);
 
@@ -50,7 +60,7 @@ export function* createTask<T>(operation: Operation<T>, options?: TaskOptions): 
 
       let task: TaskInternal<T> = {
         get state() { return state; },
-        get labels() { return operation?.labels ?? {}; },
+        labels,
         options: options || {},
         run,
         halt,

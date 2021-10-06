@@ -4,9 +4,9 @@ import { detach } from "./detach";
 import { createFuture } from "./future";
 import { createTask, TaskInternal } from './internal';
 
-export function run<T>(operation: Operation<T>): Task<T> {
+export function run<T>(operation: Operation<T>, options?: TaskOptions): Task<T> {
   return evaluate(function*() {
-    return yield* externalize(yield* createTask(operation));
+    return yield* externalize(yield* createTask(operation, options));
   });
 }
 
@@ -30,6 +30,7 @@ export function* externalize<T>(internal: TaskInternal<T>): Prog<Task<T>> {
     get state() { return internal.state; },
     get labels() { return internal.labels; },
     get options() { return internal.options; },
+    setLabels: labels => internal.labels = {...internal.labels, ...labels },
     then: (...args) => promise.then(...args),
     catch: (...args) => promise.catch(...args),
     finally: (...args) => promise.finally(...args),

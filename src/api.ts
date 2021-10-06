@@ -27,12 +27,14 @@ export interface TaskOptions {
   blockParent?: boolean;
   scope?: Task;
   readonly yieldScope?: Task;
+  labels?: Labels;
 }
 
 export interface Task<T = any> extends Future<T> {
   state: 'running' | 'settling' | 'completed' | 'errored' | 'halted';
   options: TaskOptions;
   labels: Labels;
+  setLabels(labels: Labels): void;
   run<R>(operation?: Operation<R>, options?: TaskOptions): Task<R>;
   spawn<R>(operation?: Operation<R>, options?: TaskOptions): Operation<Task<R>>;
   halt(): Future<void>;
