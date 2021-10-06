@@ -5,6 +5,7 @@ import type { Controller } from './controller';
 import { shift } from '../continutation';
 import { createIteratorController } from './iterator-controller';
 import { createResourceController }  from './resource-controller';
+import { createFunctionController } from './function-controller';
 
 export function createController<T>(operation: Operation<T>): Controller<T> {
   if (isPromise<T>(operation)) {
@@ -33,49 +34,6 @@ function createPromiseController<T>(promise: PromiseLike<T>): Controller<T> {
           error => k({ type: 'failure', error })
         )
       })
-    }
-  }
-}
-
-
-function createFunctionController<T>(fn: OperationFn<T>, create: (t: Task<T>) => Controller<T>): Controller<T> {
-  let delegate: Controller<T>;
-
-  function resolve<T>(task: Task<T>, fn: OperationFn<T>): Operation<T> {
-    for (let op: Operation<T> = fn; ; op = op(task)) {
-      if (typeof op !== 'function') {
-        return op;
-      }
-    }
-  }
-
-  return {
-    *begin(task) {
-      try {
-        delegate = create(task);
-        let operation = resolve(task, fn);
-        task.setLabels({
-          ...operation?.labels,
-          ...fn.labels
-        });
-      } catch (error) {
-        return { type: 'failure', error } as Outcome<T>;
-      }
-      return yield* delegate.begin(task);
-    },
-    *interrupt() {
-      if (delegate && delegate.interrupt) {
-        return yield* delegate.interrupt();
-      } else {
-        return { type: 'success' } as Outcome<T>;
-      }
-    },
-    *ensure() {
-      if (delegate && delegate.ensure) {
-        return yield* delegate.ensure();
-      } else {
-        return { type: 'success' } as Outcome<T>;
-      }
     }
   }
 }
