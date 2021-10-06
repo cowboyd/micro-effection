@@ -34,7 +34,7 @@ export function* externalize<T>(internal: TaskInternal<T>): Prog<Task<T>> {
     then: (...args) => promise.then(...args),
     catch: (...args) => promise.catch(...args),
     finally: (...args) => promise.finally(...args),
-    [Symbol.toStringTag]:  '[object Task]',
+    [Symbol.toStringTag]: 'Task',
 
     run<T>(operation?: Operation<T>, options?: TaskOptions): Task<T> {
       if (task.state !== 'running') {
