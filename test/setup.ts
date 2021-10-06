@@ -1,5 +1,4 @@
-import { Operation } from '../src';
-import { sleep } from '../src/operations/sleep';
+import { Resource, Operation, sleep, spawn } from '../src';
 
 export function* createNumber(value: number): Operation<number> {
   yield sleep(1);
@@ -27,4 +26,17 @@ export function *syncResolve(value: string): Operation<string> {
 
 export function *syncReject(value: string): Operation<string> {
   throw new Error(`boom: ${value}`);
+}
+
+export function asyncResource(duration: number, value: string, status: { status: string }): Resource<string> {
+  return {
+    *init() {
+      yield spawn(function*() {
+        yield sleep(duration + 10);
+        status.status = 'active';
+      });
+      yield sleep(duration);
+      return value;
+    }
+  };
 }
