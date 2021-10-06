@@ -4,7 +4,7 @@ import { detach } from "./detach";
 import { createFuture } from "./future";
 import { createTask, TaskInternal } from './internal';
 
-export function run<T>(operation: Operation<T>, options?: TaskOptions): Task<T> {
+export function run<T>(operation?: Operation<T>, options?: TaskOptions): Task<T> {
   return evaluate(function*() {
     return yield* externalize(yield* createTask(operation, options));
   });
@@ -36,7 +36,7 @@ export function* externalize<T>(internal: TaskInternal<T>): Prog<Task<T>> {
     finally: (...args) => promise.finally(...args),
     [Symbol.toStringTag]:  '[object Task]',
 
-    run<T>(operation: Operation<T>, options?: TaskOptions): Task<T> {
+    run<T>(operation?: Operation<T>, options?: TaskOptions): Task<T> {
       if (task.state !== 'running') {
         throw new Error('cannot spawn a child on a task which is not running');
       }
