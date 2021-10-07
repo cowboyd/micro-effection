@@ -30,6 +30,7 @@ export function* externalize<T>(internal: TaskInternal<T>): Prog<Task<T>> {
     get state() { return internal.state; },
     get labels() { return internal.labels; },
     get options() { return internal.options; },
+    get type() { return internal.type },
     setLabels: labels => internal.labels = {...internal.labels, ...labels },
     then: (...args) => promise.then(...args),
     catch: (...args) => promise.catch(...args),
@@ -47,7 +48,7 @@ export function* externalize<T>(internal: TaskInternal<T>): Prog<Task<T>> {
         }));
       })
     },
-    spawn<T>(operation: Operation<T>, options?: TaskOptions): Operation<Task<T>> {
+    spawn<T>(operation?: Operation<T>, options?: TaskOptions): Operation<Task<T>> {
       return {
         *begin() {
           return { type: 'success', value: task.run(operation, options) };

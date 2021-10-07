@@ -9,8 +9,10 @@ import { createFunctionController } from './function-controller';
 import { Future, isFuture } from '../future';
 
 export function createController<T>(operation: Operation<T>): Controller<T> {
-  if (isFuture(operation) || isTask(operation)) {
+  if (isFuture(operation)) {
     return createFutureController(operation as Future<T>);
+  } else if (isTask(operation)) {
+    return {...createFutureController(operation as Future<T>), type: 'task'};
   } else if (isPromise<T>(operation)) {
     return createPromiseController(operation);
   } else if (typeof operation === 'function') {
@@ -30,12 +32,14 @@ export function createController<T>(operation: Operation<T>): Controller<T> {
 
 function createFutureController<T>(future: Future<T>): Controller<T> {
   return {
+    type: 'future',
     *begin() { return yield* future; }
   }
 }
 
 function createPromiseController<T>(promise: PromiseLike<T>): Controller<T> {
   return {
+    type: 'promise',
     *begin() {
       return yield* shift<Outcome<T>>(function*(k) {
         promise.then(
@@ -49,6 +53,7 @@ function createPromiseController<T>(promise: PromiseLike<T>): Controller<T> {
 
 function createSuspendController<T>(): Controller<T> {
   return {
+    type: 'suspend',
     *begin() {
       return yield* shift<Outcome<T>>(function*() {});
     }

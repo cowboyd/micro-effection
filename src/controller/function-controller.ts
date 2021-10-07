@@ -13,6 +13,14 @@ export function createFunctionController<T>(fn: OperationFn<T>, create: (t: Task
   }
 
   return {
+    get type() {
+      if (delegate) {
+        let specifier = delegate.type === 'promise' ? 'async' : delegate.type;
+        return `${specifier} function`;
+      } else {
+        return `function`;
+      }
+    },
     *begin(task) {
       try {
         delegate = create(task);

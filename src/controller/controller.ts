@@ -6,4 +6,5 @@ export interface Controller<T> {
   begin(task: Task<T>): Prog<Outcome<T>>;
   interrupt?(): Prog<Outcome<any>>;
   ensure?(): Prog<Outcome<any>>;
+  type?: string;
 }

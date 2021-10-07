@@ -1,5 +1,5 @@
 import type { Labels, Operation, TaskOptions } from "./api";
-import { Prog, shift, reset } from "./continutation";
+import { Prog, shift, reset, evaluate } from "./continutation";
 import { createDestiny, Outcome } from "./destiny";
 import { createController } from './controller';
 import { detach } from './detach';
@@ -9,6 +9,7 @@ export interface TaskInternal<T> {
   state: 'running' | 'settling' | 'completed' | 'errored' | 'halted';
   options: TaskOptions;
   labels: Labels;
+  type: string;
   run<R>(operation: Operation<R>, options?: TaskOptions): Prog<TaskInternal<R>>;
   halt(): Prog<Outcome<void>>;
   interrupt(): Prog<Outcome<void>>;
@@ -32,7 +33,9 @@ export function* createTask<T>(operation: Operation<T>, options?: TaskOptions): 
   }
 
   return yield* reset<TaskInternal<T>>(function*() {
-    let { begin, interrupt, ensure } = createController(operation);
+    let controller = createController(operation);
+
+    let { begin, interrupt, ensure } = controller;
 
     let outcome = yield* shift<Outcome<T>>(function*(settle) {
 
@@ -60,6 +63,7 @@ export function* createTask<T>(operation: Operation<T>, options?: TaskOptions): 
 
       let task: TaskInternal<T> = {
         get state() { return state; },
+        get type() { return  options?.type ?? controller.type ?? 'continuation' },
         labels,
         options: options || {},
         run,

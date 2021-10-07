@@ -50,6 +50,7 @@ export function createIteratorController<T>(generator: OperationIterator<T> & Cl
   }
 
   return {
+    type: 'generator',
     *begin(task): Prog<Outcome<T>> {
       if (generator[claimed]) {
         let error = new Error(`An operation iterator can only be run once in a single task, but it looks like has been either yielded to, or run multiple times`);
